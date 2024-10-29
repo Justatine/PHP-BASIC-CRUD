@@ -24,6 +24,12 @@ $(document).ready(function () {
                 }
             },
             {
+                data: "image",
+                render: function (data) {
+                  return `<img src="../files/${data === null ? 'default.png' : data}" style="height:30px;">`
+                }
+            },
+            {
                 data: "title",
                 render: function (data) {
                 return `<p class="text-xs font-weight-bold mb-0 text-start">${data}</p>`
@@ -55,14 +61,44 @@ $(document).ready(function () {
         responsive: true,
     })
 
+    $("#addPost").submit(function (e) { 
+        e.preventDefault();
+        
+        var formData=new FormData(this);
+        formData.forEach((value, key)=>{
+            console.log(key+" "+value)
+        })
+
+        $.ajax({
+            type: "POST",
+            url: url+"add",
+            data: formData,
+            processData: false,
+            contentType: false,  
+            dataType: "json",
+            success: function (response) {
+                if (response.success) {
+                    alert(response.message)
+                    setTimeout(() => {
+                        window.location.replace('index.html')
+                    }, 1000);
+                }
+            }
+        });
+    });
+    
     $(document).on("click", ".delBtn", function () {
         const id = $(this).data('id')
         console.log(id)
-        var data = {id:id}
+        let formData = new FormData();
+        formData.append('id',id)
+        
         $.ajax({
             type: "DELETE",
             url: url+"delete",
-            data: JSON.stringify(data),
+            data: formData,
+            processData: false,
+            contentType: false,           
             dataType: "json",
             success: function (response) {
                 if (response.success) {
@@ -91,32 +127,6 @@ $(document).ready(function () {
         });
     }   
 
-    $("#addPost").submit(function (e) { 
-        e.preventDefault();
-        
-        var formData=new FormData(this);
-        formData.forEach((value, key)=>{
-            console.log(key+" "+value)
-        })
-
-        $.ajax({
-            type: "POST",
-            url: url+"add",
-            data: formData,
-            processData: false,
-            contentType: false,  
-            dataType: "json",
-            success: function (response) {
-                if (response.success) {
-                    alert(response.message)
-                    setTimeout(() => {
-                        window.location.replace('index.html')
-                    }, 1000);
-                }
-            }
-        });
-    });
-
     $("#editPost").submit(function (e) { 
         e.preventDefault();
         
@@ -131,7 +141,7 @@ $(document).ready(function () {
         $.ajax({
             type: "PUT",
             url: url+"update",
-            data: JSON.stringify(data),
+            data: formData,
             processData: false,
             contentType: false,  
             dataType: "json",

@@ -12,10 +12,35 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = $_POST['title'];
         $content = $_POST['content'];
+        $image = $_FILES["image"];
 
-        $query = "INSERT INTO posts(title,content) VALUES(?, ?)";
+        $imageName = null;
+        $imageUploaded = false;
+        if (is_uploaded_file($image["tmp_name"])) {
+          $imageUploaded = true;
+          $imageName = time() . $image["name"];
+      
+          $allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif"];
+          $uploadedMimeType = $_FILES["image"]["type"];
+      
+          if (!in_array($uploadedMimeType, $allowedMimeTypes)) {
+            $response["error"]["image"] = "Invalid image extension";
+          }
+        }
+  
+        if ($imageUploaded) {
+          $targetPath = "../../files/" . $imageName;
+      
+          if (!move_uploaded_file($image["tmp_name"], $targetPath)) {
+            $response["error"]["image"] = "Failed to move uploaded file";
+            echo json_encode($response);
+            exit();
+          }
+        }
+    
+        $query = "INSERT INTO posts(title,content,image) VALUES(?, ?, ?)";
         $sql=$conn->prepare($query);
-        $sql->bind_param("ss",$title,$content);
+        $sql->bind_param("sss",$title,$content, $imageName);
         
         if ($sql->execute()) {
             $response['success'] = true;
